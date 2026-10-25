@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta name="google" content="notranslate">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bájalo · Descarga videos de cualquier red social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F3F2FA;
+  --surface: #FFFFFF;
+  --ink: #1B1740;
+  --muted: #6B6890;
+  --line: #D9D6EE;
+  --accent: #5B3DF5;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E6E1FF;
+  --error: #B3261E;
+  --error-soft: #FBE9E7;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: "Figtree", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+main { max-width: 760px; margin: 0 auto; padding: 48px 20px 64px; }
+.brand { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 1.25rem; }
+.brand span { color: var(--accent); }
+h1 {
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 40px 0 12px;
+  max-width: 14ch;
+}
+.lead { color: var(--muted); margin: 0 0 32px; max-width: 46ch; }
+
+.networks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.chip {
+  font: inherit; font-weight: 500;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--accent); }
+.chip[aria-checked="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+.field { display: flex; gap: 8px; }
+.field input {
+  flex: 1; min-width: 0;
+  font: inherit;
+  padding: 14px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.field input::placeholder { color: #9C99BC; }
+.btn {
+  font: inherit; font-weight: 600;
+  border: 0; border-radius: 12px;
+  background: var(--accent); color: var(--accent-ink);
+  padding: 14px 22px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .55; cursor: progress; }
+:is(.chip, .btn, input):focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.message { margin: 16px 0 0; padding: 12px 16px; border-radius: 12px; }
+.message.error { background: var(--error-soft); color: var(--error); }
+.message.loading { background: var(--accent-soft); color: var(--ink); }
+[hidden] { display: none !important; }
+
+.result { margin-top: 28px; background: var(--surface); border-radius: 20px; padding: 20px; border: 1px solid var(--line); }
+.video { display: flex; gap: 16px; align-items: center; }
+.video img { width: 148px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: var(--line); flex-shrink: 0; }
+.video h2 { font-size: 1.05rem; margin: 0 0 4px; line-height: 1.3; overflow-wrap: anywhere; }
+.video p { margin: 0; color: var(--muted); font-size: .9rem; }
+.options { list-style: none; margin: 20px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.options li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.options li:last-child { border-bottom: 0; }
+.options .name { font-weight: 600; flex: 1; }
+.options .size { color: var(--muted); font-size: .9rem; }
+.options .btn { padding: 8px 16px; border-radius: 10px; }
+
+footer { margin-top: 48px; color: var(--muted); font-size: .85rem; max-width: 60ch; }
+
+@media (max-width: 560px) {
+  .field { flex-direction: column; }
+  .video { flex-direction: column; align-items: flex-start; }
+  .video img { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">Bá<span>jalo</span></div>
+  <h1>Pega el link, elige la calidad</h1>
+  <p class="lead">Selecciona la red social, pega el enlace del video y descárgalo en la calidad que prefieras.</p>
+
+  <div class="networks" role="radiogroup" aria-label="Red social" id="networks"></div>
+
+  <div class="field">
+    <input id="url" type="url" inputmode="url" placeholder="https://…" aria-label="Enlace del video" autocomplete="off">
+    <button class="btn" id="search">Buscar video</button>
+  </div>
+
+  <div class="message error" id="error" role="alert" hidden></div>
+  <div class="message loading" id="loading" role="status" hidden>Buscando el video…</div>
+
+  <section class="result" id="result" hidden>
+    <div class="video">
+      <img id="thumb" alt="">
+      <div>
+        <h2 id="title"></h2>
+        <p id="meta"></p>
+      </div>
+    </div>
+    <ul class="options" id="options"></ul>
+  </section>
+
+  <footer>Descarga solo videos tuyos o con permiso de su autor. Respeta los derechos de autor y los términos de cada plataforma.</footer>
+</main>
+
+<script>
+const NETWORKS = [
+  ["youtube", "YouTube", ["youtube.com", "youtu.be"]],
+  ["instagram", "Instagram", ["instagram.com"]],
+  ["facebook", "Facebook", ["facebook.com", "fb.watch", "fb.com"]],
+  ["tiktok", "TikTok", ["tiktok.com"]],
+  ["twitter", "X (Twitter)", ["twitter.com", "x.com"]],
+  ["reddit", "Reddit", ["reddit.com", "redd.it"]],
+  ["vimeo", "Vimeo", ["vimeo.com"]],
+  ["twitch", "Twitch", ["twitch.tv"]],
+  ["pinterest", "Pinterest", ["pinterest.com", "pin.it"]],
+  ["dailymotion", "Dailymotion", ["dailymotion.com", "dai.ly"]],
+  ["otro", "Otra página", []],
+];
+
+const $ = (id) => document.getElementById(id);
+let platform = "youtube";
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function selectNetwork(key) {
+  platform = key;
+  document.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-checked", c.dataset.key === key));
+}
+
+NETWORKS.forEach(([key, label]) => {
+  const chip = el("button", "chip", label);
+  chip.type = "button";
+  chip.dataset.key = key;
+  chip.setAttribute("role", "radio");
+  chip.addEventListener("click", () => selectNetwork(key));
+  $("networks").appendChild(chip);
+});
+selectNetwork(platform);
+
+// Si el link pegado es de otra red, cambia la selección automáticamente.
+$("url").addEventListener("input", () => {
+  try {
+    const host = new URL($("url").value.trim()).hostname.toLowerCase();
+    const match = NETWORKS.find(([, , domains]) => domains.some((d) => host === d || host.endsWith("." + d)));
+        selectNetwork(match ? match[0] : "otro");
+  } catch (_) { /* aún no es un link válido */ }
+});
+$("url").addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
+$("search").addEventListener("click", search);
+
+function showError(msg) { $("error").textContent = msg; $("error").hidden = false; }
+function reset() { $("error").hidden = true; $("result").hidden = true; }
+
+function formatSize(bytes) {
+  if (!bytes) return "";
+  const mb = bytes / 1048576;
+  return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${Math.round(mb)} MB`;
+}
+function formatDuration(s) {
+  if (!s) return "";
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60);
+  const pad = (n) => String(n).padStart(2, "0");
+  return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+
+async function search() {
+  reset();
+  const url = $("url").value.trim();
+  if (!url) return showError("Pega primero el enlace del video.");
+  $("search").disabled = true;
+  $("loading").hidden = false;
+  try {
+    const res = await fetch("/api/info", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, platform }),
+    });
+    const data = await res.json();
+    if (!res.ok) return showError(data.error || "Algo salió mal.");
+    renderResult(data, url);
+  } catch (_) {
+    showError("No se pudo conectar con el servidor.");
+  } finally {
+    $("loading").hidden = true;
+    $("search").disabled = false;
+  }
+}
+
+function renderResult(data, url) {
+  $("thumb").src = data.thumbnail || "";
+  $("title").textContent = data.title;
+  $("meta").textContent = [data.uploader, formatDuration(data.duration)].filter(Boolean).join(" · ");
+  const list = $("options");
+  list.replaceChildren();
+  data.options.forEach((opt) => {
+    const li = el("li");
+    li.append(el("span", "name", opt.label), el("span", "size", formatSize(opt.size)));
+    const btn = el("button", "btn", "Descargar");
+    btn.type = "button";
+    btn.addEventListener("click", () => download(btn, url, opt.id));
+    li.append(btn);
+    list.append(li);
+  });
+  $("result").hidden = false;
+}
+
+async function download(btn, url, option) {
+  $("error").hidden = true;
+  btn.disabled = true;
+  btn.textContent = "Preparando…";
+  try {
+    const params = new URLSearchParams({ url, platform, option });
+    const res = await fetch("/api/download?" + params);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return showError(data.error || "No se pudo descargar el video.");
+    }
+    const blob = await res.blob();
+    const disposition = res.headers.get("Content-Disposition") || "";
+    const name = (disposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i) || [])[1] || "video.mp4";
+    const a = el("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = decodeURIComponent(name);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch (_) {
+    showError("La descarga se interrumpió. Inténtalo de nuevo.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Descargar";
+  }
+}
+</script>
+</body>
+</html>

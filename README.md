@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Bájalo
 
 Página web para descargar videos de redes sociales: eliges la red, pegas el link y escoges la calidad.
@@ -37,3 +38,6 @@ bajalo/
 - **Videos privados:** no se pueden descargar sin tu sesión. Puedes exportar las cookies de tu navegador a `cookies.txt` y activar la línea `cookiefile` en `app.py`, pero úsalo solo con tu propia cuenta.
 - **Publicarla en internet:** YouTube e Instagram suelen bloquear las IPs de servidores en la nube, y una página pública necesita límites de uso (rate limiting), más espacio en disco y ancho de banda. Para uso personal, correrla en tu computador es lo más estable.
 - **Legal:** descargar contenido va contra los términos de servicio de la mayoría de plataformas y puede violar derechos de autor. Úsala con videos tuyos o con permiso del autor.
+=======
+# DescargadorVideos
+>>>>>>> 36254867e8fd16538c9408163d03f8f1bd5fa67a
